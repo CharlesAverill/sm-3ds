@@ -4,6 +4,12 @@
 
 This is a (currently non-functional) 3DS port of Super Metroid, based on [the PC port by snesrev](https://github.com/snesrev/sm).
 
+On hardware, this will crash immediately (as far as I've tested).
+I have had inconsistent results (between 4 and 50fps) on Azahar, and I haven't set up input yet.
+I don't think sound is working, but I can't tell if I haven't configured something or if it's actually broken.
+
+![title screen on Azahar](screenshots/titlescreen.png)
+
 ## Building
 
 ### Setup
