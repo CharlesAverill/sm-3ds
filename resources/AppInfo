@@ -1,0 +1,8 @@
+APP_TITLE = Super Metroid 3DS Port
+APP_DESCRIPTION = A port of Super Metroid for the 3DS
+APP_AUTHOR = snesrev, Charles Averill
+APP_PRODUCT_CODE = SMtroid
+APP_UNIQUE_ID = 0x7E8E5
+APP_VER_MAJOR = 0
+APP_VER_MINOR = 1
+APP_VER_MICRO = 0

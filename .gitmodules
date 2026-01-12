@@ -1,0 +1,7 @@
+[submodule "sm"]
+	path = sm
+	url = https://github.com/snesrev/sm.git
+[submodule "SDL"]
+	path = SDL
+	url = https://github.com/libsdl-org/SDL.git
+	branch = SDL2
