@@ -1,6 +1,7 @@
 # sm-3ds
 
-![banner](resources/ghpreview.png)
+<!-- ![banner](resources/ghpreview.png) -->
+![ceres station on Azahar](screenshots/sm-3ds.gif)
 
 This is a 3DS port of Super Metroid, based on [the PC port by snesrev](https://github.com/snesrev/sm).
 
@@ -8,7 +9,6 @@ This port is not yet optimized for the 3DS, and runs at ~5fps.
 Audio is not working yet.
 Saves are untested.
 
-![ceres station on Azahar](screenshots/sm-3ds.gif)
 ![title screen on Azahar](screenshots/titlescreen.png)
 
 ## Building
