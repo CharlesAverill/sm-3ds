@@ -36,9 +36,12 @@ SDL := SDL
 sdl: $(SDL)/build/libSDL2.a
 $(SDL)/build/libSDL2.a:
 	@cd $(TOPDIR)/$(SDL) && \
-	cmake -S. -Bbuild -DCMAKE_TOOLCHAIN_FILE="$(DEVKITPRO)/cmake/3DS.cmake" -DCMAKE_BUILD_TYPE=Release && \
-	cmake --build build -j
-	chmod +x $(TOPDIR)/$(SDL)/build/sdl2-config
+	cmake -S. -Bbuild -DCMAKE_TOOLCHAIN_FILE="$(DEVKITPRO)/cmake/3DS.cmake" \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_C_FLAGS_RELEASE="-O3 -DNDEBUG" \
+		-DCMAKE_CXX_FLAGS_RELEASE="-O3 -DNDEBUG" && \
+	cmake --build build --parallel && \
+	chmod +x build/sdl2-config
 
 #---------------------------------------------------------------------------------
 # Resource Setup
@@ -55,8 +58,8 @@ RSF := $(TOPDIR)/$(RESOURCES)/template.rsf
 ARCH := -march=armv6k -mtune=mpcore -mfloat-abi=hard
 
 COMMON_FLAGS := -g -Wall -Wno-strict-aliasing -Wno-unused-value -Wno-unused-but-set-variable -O3 -mword-relocations -fomit-frame-pointer \
-	-ffast-math $(ARCH) $(INCLUDE) -D__3DS__ $(BUILD_FLAGS)
-CFLAGS := $(COMMON_FLAGS) -std=gnu99 $(shell $(SDL)/build/sdl2-config --cflags) -DSYSTEM_VOLUME_MIXER_AVAILABLE=0 -I. -Wno-typedef-redefinition
+	-ffast-math $(ARCH) $(INCLUDE) -D__3DS__ -mno-unaligned-access $(BUILD_FLAGS)
+CFLAGS := $(COMMON_FLAGS) -std=gnu99 $(shell $(CURDIR)/../$(SDL)/build/sdl2-config --cflags) -DSYSTEM_VOLUME_MIXER_AVAILABLE=1
 CXXFLAGS := $(COMMON_FLAGS) -std=gnu++17
 # CXXFLAGS += -fno-rtti -fno-exceptions
 

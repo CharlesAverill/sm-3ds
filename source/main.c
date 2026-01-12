@@ -199,6 +199,14 @@ static void HandleCommand(uint32 j, bool pressed) {
   }
 }
 
+enum {
+  kDefaultFullscreen = 0,
+  kMaxWindowScale = 10,
+  kDefaultFreq = 44100,
+  kDefaultChannels = 2,
+  kDefaultSamples = 2048,
+};
+
 // #undef main
 int main(int argc, char** argv) {
   // Use default config - no config file on 3DS
@@ -206,8 +214,12 @@ int main(int argc, char** argv) {
 
   g_snes_width = 256;
   g_snes_height = 240;
-  g_ppu_render_flags = g_config.extend_y * kPpuRenderFlags_Height240 
-                      | g_config.new_renderer * kPpuRenderFlags_NewRenderer; //g_config.new_renderer * kPpuRenderFlags_NewRenderer;
+  g_ppu_render_flags = kPpuRenderFlags_Height240 
+                     | kPpuRenderFlags_NewRenderer
+                     | kPpuRenderFlags_4x4Mode7;
+  g_config.audio_freq = kDefaultFreq;
+  g_config.audio_channels = kDefaultChannels;
+  g_config.audio_samples = kDefaultSamples;
 
   // Initialize SDL
   if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK) != 0) {
@@ -307,12 +319,6 @@ int main(int argc, char** argv) {
 
     while (SDL_PollEvent(&event)) {
       switch (event.type) {
-      // case SDL_KEYDOWN:
-      //   HandleInput(event.key.keysym.sym, event.key.keysym.mod, true);
-      //   break;
-      // case SDL_KEYUP:
-      //   HandleInput(event.key.keysym.sym, event.key.keysym.mod, false);
-      //   break;
       case SDL_JOYBUTTONDOWN:
         HandleCommand(event.jbutton.button, true);
         break;
@@ -346,20 +352,20 @@ int main(int argc, char** argv) {
       DrawPpuFrame();
 
     // Frame delay for 60 fps
-    static const uint8 delays[3] = { 17, 17, 16 };
-    lastTick += delays[frameCtr % 3];
-    uint32 curTick = SDL_GetTicks();
+    // static const uint8 delays[3] = { 17, 17, 16 };
+    // lastTick += delays[frameCtr % 3];
+    // uint32 curTick = SDL_GetTicks();
 
-    if (lastTick > curTick) {
-      uint32 delta = lastTick - curTick;
-      if (delta > 500) {
-        lastTick = curTick - 500;
-        delta = 500;
-      }
-      SDL_Delay(delta);
-    } else if (curTick - lastTick > 500) {
-      lastTick = curTick;
-    }
+    // if (lastTick > curTick) {
+    //   uint32 delta = lastTick - curTick;
+    //   if (delta > 500) {
+    //     lastTick = curTick - 500;
+    //     delta = 500;
+    //   }
+    //   SDL_Delay(delta);
+    // } else if (curTick - lastTick > 500) {
+    //   lastTick = curTick;
+    // }
   }
 
   // Cleanup

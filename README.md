@@ -2,11 +2,11 @@
 
 ![banner](resources/ghpreview.png)
 
-This is a (currently non-functional) 3DS port of Super Metroid, based on [the PC port by snesrev](https://github.com/snesrev/sm).
+This is a 3DS port of Super Metroid, based on [the PC port by snesrev](https://github.com/snesrev/sm).
 
-On hardware, this will crash immediately (as far as I've tested).
-I get ~5fps on standard Azahar, and ~50fps with unthrottled emulation speed (~1000%).
-Audio does not work yet.
+This port is not yet optimized for the 3DS, and runs at ~5fps.
+Audio is not working yet.
+Saves are untested.
 
 ![ceres station on Azahar](screenshots/sm-3ds.gif)
 ![title screen on Azahar](screenshots/titlescreen.png)
@@ -37,7 +37,7 @@ cd sm-3ds
 # Place your copy of Super Metroid in romfs
 cp ~/Games/sm.smc romfs
 
-# Do this for whatever reason
+# This conflicts with the 3ds headers
 sed -i 's/typedef uint32_t uint;//g' sm/src/snes/ppu.c
 
 # Build SDL2
