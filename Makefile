@@ -38,6 +38,7 @@ $(SDL)/build/libSDL2.a:
 	@cd $(TOPDIR)/$(SDL) && \
 	cmake -S. -Bbuild -DCMAKE_TOOLCHAIN_FILE="$(DEVKITPRO)/cmake/3DS.cmake" -DCMAKE_BUILD_TYPE=Release && \
 	cmake --build build -j
+	chmod +x $(TOPDIR)/$(SDL)/build/sdl2-config
 
 #---------------------------------------------------------------------------------
 # Resource Setup
@@ -55,7 +56,7 @@ ARCH := -march=armv6k -mtune=mpcore -mfloat-abi=hard
 
 COMMON_FLAGS := -g -Wall -Wno-strict-aliasing -Wno-unused-value -Wno-unused-but-set-variable -O3 -mword-relocations -fomit-frame-pointer \
 	-ffast-math $(ARCH) $(INCLUDE) -D__3DS__ $(BUILD_FLAGS)
-CFLAGS := $(COMMON_FLAGS) -std=gnu99 $(shell sdl2-config --cflags) -DSYSTEM_VOLUME_MIXER_AVAILABLE=0 -I. -Wno-typedef-redefinition
+CFLAGS := $(COMMON_FLAGS) -std=gnu99 $(shell $(SDL)/build/sdl2-config --cflags) -DSYSTEM_VOLUME_MIXER_AVAILABLE=0 -I. -Wno-typedef-redefinition
 CXXFLAGS := $(COMMON_FLAGS) -std=gnu++17
 # CXXFLAGS += -fno-rtti -fno-exceptions
 
@@ -174,7 +175,7 @@ fmt:
 
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(OUTPUT) $(DEVEL_OBJECTS) $(PARSER_OUT)
+	@rm -fr $(BUILD) $(OUTPUT) $(DEVEL_OBJECTS) $(PARSER_OUT) $(SDL)/build
 
 #---------------------------------------------------------------------------------
 else
@@ -327,5 +328,3 @@ endef
 #---------------------------------------------------------------------------------------
 endif
 #---------------------------------------------------------------------------------------
-
-$(info $(BANNER_IMAGE_FILE))

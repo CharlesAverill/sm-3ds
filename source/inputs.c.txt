@@ -1,0 +1,228 @@
+#include <SDL2/SDL.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+#define WINDOW_W 800
+#define WINDOW_H 600
+
+#define GLYPH_W 8
+#define GLYPH_H 8
+#define FONT_COLS 16
+
+enum Button {
+  BTN_A = 0,
+  BTN_B = 1,
+  BTN_SELECT = 2,
+  BTN_START = 3,
+  BTN_DPAD_R = 4,
+  BTN_DPAD_L = 5,
+  BTN_DPAD_U = 6,
+  BTN_DPAD_D = 7,
+  BTN_R = 8,
+  BTN_L = 9,
+  BTN_X = 10,
+  BTN_Y = 11,
+  BTN_ZL = 14,
+  BTN_ZR = 15,
+};
+
+void string_of_btn(enum Button b, char* buf) {
+  switch(b) {
+    case BTN_A:
+      strcpy(buf, "A");
+      break;
+    case BTN_B:
+      strcpy(buf, "B");
+      break;
+    case BTN_SELECT:
+      strcpy(buf, "SELECT");
+      break;
+    case BTN_START:
+      strcpy(buf, "START");
+      break;
+    case BTN_DPAD_R:
+      strcpy(buf, "DPAD_R");
+      break;
+    case BTN_DPAD_U:
+      strcpy(buf, "DPAD_U");
+      break;
+    case BTN_DPAD_L:
+      strcpy(buf, "DPAD_L");
+      break;
+    case BTN_DPAD_D:
+      strcpy(buf, "DPAD_D");
+      break;
+    case BTN_R:
+      strcpy(buf, "R");
+      break;
+    case BTN_L:
+      strcpy(buf, "L");
+      break;
+    case BTN_X:
+      strcpy(buf, "X");
+      break;
+    case BTN_Y:
+      strcpy(buf, "Y");
+      break;
+    case BTN_ZL:
+      strcpy(buf, "ZL");
+      break;
+    case BTN_ZR:
+      strcpy(buf, "ZR");
+      break;
+    default:
+      sprintf(buf, "UNKNOWN %d", b);
+      // strcpy(buf, "UNKNOWN");
+      break;
+  }
+}
+
+SDL_Texture *load_font(SDL_Renderer *ren, const char *path)
+{
+    SDL_Surface *surf = SDL_LoadBMP(path);
+    if (!surf) {
+        fprintf(stderr, "SDL_LoadBMP failed: %s\n", SDL_GetError());
+        return NULL;
+    }
+
+    /* Treat magenta as transparent if desired */
+    Uint32 key = SDL_MapRGB(surf->format, 255, 0, 255);
+    SDL_SetColorKey(surf, SDL_TRUE, key);
+
+    SDL_Texture *tex = SDL_CreateTextureFromSurface(ren, surf);
+    SDL_FreeSurface(surf);
+    return tex;
+}
+
+void draw_text(SDL_Renderer *ren, SDL_Texture *font,
+               int x, int y, const char *text)
+{
+    SDL_Rect src, dst;
+    dst.w = GLYPH_W;
+    dst.h = GLYPH_H;
+    dst.y = y;
+
+    for (size_t i = 0; text[i]; i++) {
+        unsigned char c = (unsigned char)text[i];
+        int col = c % FONT_COLS;
+        int row = c / FONT_COLS;
+
+        src.x = col * GLYPH_W;
+        src.y = row * GLYPH_H;
+        src.w = GLYPH_W;
+        src.h = GLYPH_H;
+
+        dst.x = x + (int)(i * GLYPH_W);
+        SDL_RenderCopy(ren, font, &src, &dst);
+    }
+}
+
+int main(int argc, char* argv[])
+{
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK) != 0) {
+        fprintf(stderr, "SDL_Init failed: %s\n", SDL_GetError());
+        return 1;
+    }
+    SDL_JoystickEventState(SDL_ENABLE);
+    SDL_GameControllerEventState(SDL_ENABLE);
+
+    if (SDL_NumJoysticks() > 0) {
+        SDL_GameControllerOpen(0);
+    }
+
+    SDL_Window *win = SDL_CreateWindow(
+        "SDL2 Input Reporter (Bitmap Font)",
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
+        WINDOW_W,
+        WINDOW_H,
+        SDL_WINDOW_SHOWN
+    );
+
+    SDL_Renderer *ren = SDL_CreateRenderer(
+        win, -1, SDL_RENDERER_SOFTWARE
+    );
+
+    SDL_Texture *font = load_font(ren, "romfs:/font.bmp");
+    if (!font)
+        return 1;
+
+    char message[256] = "No input yet.";
+    char buf[10];
+    int running = 1;
+
+    while (running) {
+        SDL_Event e;
+        while (SDL_PollEvent(&e)) {
+            switch (e.type) {
+            case SDL_QUIT:
+                snprintf(message, sizeof(message), "Quit event.");
+                running = 0;
+                break;
+            case SDL_FINGERUP:
+              snprintf(message, sizeof(message), "Finger up");
+              break;
+            case SDL_FINGERDOWN:
+              snprintf(message, sizeof(message), "Finger down");
+              break;
+            case SDL_FINGERMOTION:
+              snprintf(message, sizeof(message), "Finger motion");
+              break;
+            case SDL_WINDOWEVENT:
+              snprintf(message, sizeof(message), "Window event");
+              break;
+            case SDL_JOYBUTTONDOWN:
+                string_of_btn(e.jbutton.button, buf);
+                snprintf(message, sizeof(message),
+                        "Joy button %s down",
+                        buf);
+                break;
+
+            case SDL_JOYBUTTONUP:
+                string_of_btn(e.jbutton.button, buf);
+                snprintf(message, sizeof(message),
+                        "Joy button %s up",
+                        buf);
+                break;
+            case SDL_JOYAXISMOTION: {
+                const int deadzone = 8000;  // tune this
+
+                int axis = e.jaxis.axis;
+                int value = e.jaxis.value;
+
+                if (value > deadzone) {
+                    snprintf(message, sizeof(message),
+                            "Axis %d: + (%d)", axis, value);
+                } else if (value < -deadzone) {
+                    snprintf(message, sizeof(message),
+                            "Axis %d: - (%d)", axis, value);
+                } else {
+                    snprintf(message, sizeof(message),
+                            "Axis %d: center", axis);
+                }
+                break;
+            }
+
+            default:
+              snprintf(message, sizeof(message),
+                         "Unknown: 0x%x",
+                         e.type);
+                break;
+            }
+        }
+
+        SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
+        SDL_RenderClear(ren);
+
+        draw_text(ren, font, 20, 20, message);
+
+        SDL_RenderPresent(ren);
+    }
+
+    SDL_DestroyTexture(font);
+    SDL_DestroyRenderer(ren);
+    SDL_DestroyWindow(win);
+    SDL_Quit();
+    return 0;
+}

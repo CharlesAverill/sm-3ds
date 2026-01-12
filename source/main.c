@@ -17,6 +17,23 @@
 #include "src/util.h"
 #include "src/spc_player.h"
 
+enum Button {
+  BTN_A = 0,
+  BTN_B = 1,
+  BTN_SELECT = 2,
+  BTN_START = 3,
+  BTN_DPAD_R = 4,
+  BTN_DPAD_L = 5,
+  BTN_DPAD_U = 6,
+  BTN_DPAD_D = 7,
+  BTN_R = 8,
+  BTN_L = 9,
+  BTN_X = 10,
+  BTN_Y = 11,
+  BTN_ZL = 14,
+  BTN_ZR = 15,
+};
+
 static void SDLCALL AudioCallback(void *userdata, Uint8 *stream, int len);
 static void HandleInput(int keyCode, int keyMod, bool pressed);
 static void HandleCommand(uint32 j, bool pressed);
@@ -118,7 +135,37 @@ static void SDLCALL AudioCallback(void *userdata, Uint8 *stream, int len) {
   SDL_UnlockMutex(g_audio_mutex);
 }
 
+int idx_of_btn(enum Button b) {
+  switch(b) {
+    case BTN_DPAD_U:
+      return 0;
+    case BTN_DPAD_D:
+      return 1;
+    case BTN_DPAD_L:
+      return 2;
+    case BTN_DPAD_R:
+      return 3;
+    case BTN_SELECT:
+      return 4;
+    case BTN_START:
+      return 5;
+    case BTN_A:
+      return 6;
+    case BTN_B:
+      return 7;
+    case BTN_X:
+      return 8;
+    case BTN_Y:
+      return 9;
+    case BTN_L:
+      return 10;
+    case BTN_R:
+      return 11;
+  }
+}
+
 static void HandleCommand(uint32 j, bool pressed) {
+  j = 1 + idx_of_btn(j);
   if (j <= kKeys_Controls_Last) {
     static const uint8 kKbdRemap[] = { 0, 4, 5, 6, 7, 2, 3, 8, 0, 9, 1, 10, 11 };
     if (pressed)
@@ -152,25 +199,27 @@ static void HandleCommand(uint32 j, bool pressed) {
   }
 }
 
-static void HandleInput(int keyCode, int keyMod, bool pressed) {
-  int j = FindCmdForSdlKey(keyCode, (SDL_Keymod)keyMod);
-  if (j != 0)
-    HandleCommand(j, pressed);
-}
-
-#undef main
+// #undef main
 int main(int argc, char** argv) {
   // Use default config - no config file on 3DS
   ParseConfigFile(NULL);
 
   g_snes_width = 256;
   g_snes_height = 240;
-  g_ppu_render_flags = g_config.new_renderer * kPpuRenderFlags_NewRenderer;
+  g_ppu_render_flags = g_config.extend_y * kPpuRenderFlags_Height240 
+                      | g_config.new_renderer * kPpuRenderFlags_NewRenderer; //g_config.new_renderer * kPpuRenderFlags_NewRenderer;
 
   // Initialize SDL
-  if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
+  if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK) != 0) {
     printf("Failed to init SDL: %s\n", SDL_GetError());
     return 1;
+  }
+
+  SDL_JoystickEventState(SDL_ENABLE);
+  SDL_GameControllerEventState(SDL_ENABLE);
+
+  if (SDL_NumJoysticks() > 0) {
+      SDL_GameControllerOpen(0);
   }
 
   Result rc = romfsInit();
@@ -258,11 +307,17 @@ int main(int argc, char** argv) {
 
     while (SDL_PollEvent(&event)) {
       switch (event.type) {
-      case SDL_KEYDOWN:
-        HandleInput(event.key.keysym.sym, event.key.keysym.mod, true);
+      // case SDL_KEYDOWN:
+      //   HandleInput(event.key.keysym.sym, event.key.keysym.mod, true);
+      //   break;
+      // case SDL_KEYUP:
+      //   HandleInput(event.key.keysym.sym, event.key.keysym.mod, false);
+      //   break;
+      case SDL_JOYBUTTONDOWN:
+        HandleCommand(event.jbutton.button, true);
         break;
-      case SDL_KEYUP:
-        HandleInput(event.key.keysym.sym, event.key.keysym.mod, false);
+      case SDL_JOYBUTTONUP:
+        HandleCommand(event.jbutton.button, false);
         break;
       case SDL_QUIT:
         running = false;
