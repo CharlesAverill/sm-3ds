@@ -33,8 +33,11 @@ cp ~/Games/sm.smc romfs
 # Do this for whatever reason
 sed -i 's/typedef uint32_t uint;//g' sm/src/snes/ppu.c
 
+# Build SDL2
+make sdl
+
 # Build sm-3ds
-make
+make -j
 ```
 
 | Make Commands    | Action                                                                                    |

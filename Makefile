@@ -31,6 +31,9 @@ ROMFS := romfs
 RESOURCES := resources
 SDL := SDL
 
+.PHONY: sdl
+
+sdl: $(SDL)/build/libSDL2.a
 $(SDL)/build/libSDL2.a:
 	@cd $(TOPDIR)/$(SDL) && \
 	cmake -S. -Bbuild -DCMAKE_TOOLCHAIN_FILE="$(DEVKITPRO)/cmake/3DS.cmake" -DCMAKE_BUILD_TYPE=Release && \
