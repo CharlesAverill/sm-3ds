@@ -37,9 +37,6 @@ cd sm-3ds
 # Place your copy of Super Metroid in romfs
 cp ~/Games/sm.smc romfs
 
-# This conflicts with the 3ds headers
-sed -i 's/typedef uint32_t uint;//g' sm/src/snes/ppu.c
-
 # Build SDL2
 make sdl
 
