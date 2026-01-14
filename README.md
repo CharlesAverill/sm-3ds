@@ -5,9 +5,13 @@
 
 This is a 3DS port of Super Metroid, based on [the PC port by snesrev](https://github.com/snesrev/sm).
 
-This port is not yet optimized for the 3DS, and runs at ~5fps.
-Audio is not working yet.
-Saves are untested.
+This port is not yet optimized for the 3DS, and runs at ~30fps.
+Other than that, everything seems to work.
+
+Audio samples run at full speed, but with twice the delay in between.
+Likely because they're being loaded at half speed, but played by SDL at full speed in another thread.
+
+Saves are stored in the SD card's `saves` directory.
 
 ![title screen on Azahar](screenshots/titlescreen.png)
 

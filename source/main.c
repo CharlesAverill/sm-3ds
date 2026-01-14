@@ -212,8 +212,6 @@ int main(int argc, char** argv) {
   // Use default config - no config file on 3DS
   ParseConfigFile(NULL);
 
-  g_snes_width = 256;
-  g_snes_height = 240;
   g_ppu_render_flags = kPpuRenderFlags_Height240 
                      | kPpuRenderFlags_NewRenderer
                      | kPpuRenderFlags_4x4Mode7;
@@ -301,6 +299,9 @@ int main(int argc, char** argv) {
     g_frames_per_block = (534 * have.freq) / 32000;
     g_audiobuffer = (uint8 *)malloc(g_frames_per_block * have.channels * sizeof(int16));
   }
+
+  mkdir("saves", 0755);
+  RtlReadSram();
 
   PpuBeginDrawing(snes->snes_ppu, g_pixels, 256 * 4, 0);
   PpuBeginDrawing(snes->my_ppu, g_my_pixels, 256 * 4, 0);

@@ -55,16 +55,30 @@ RSF := $(TOPDIR)/$(RESOURCES)/template.rsf
 #---------------------------------------------------------------------------------
 # Build Setup (code generation)
 #---------------------------------------------------------------------------------
-ARCH := -march=armv6k -mtune=mpcore -mfloat-abi=hard
+ARCH := -march=armv6k -mtune=mpcore -mfloat-abi=hard -mfpu=vfp
 
-COMMON_FLAGS := -g -Wall -Wno-strict-aliasing -Wno-unused-value -Wno-unused-but-set-variable -O3 -mword-relocations -fomit-frame-pointer \
+COMMON_FLAGS := -Wall -Wno-strict-aliasing -Wno-unused-value -Wno-unused-const-variable -Wno-unused-but-set-variable \
+	-O3 -Ofast -mword-relocations -fomit-frame-pointer \
 	-ffast-math $(ARCH) $(INCLUDE) -D__3DS__ -mno-unaligned-access $(BUILD_FLAGS)
+# 	-flto -fwhole-program \
+#     -funroll-loops \
+#     -finline-functions \
+#     -fgcse-sm -fgcse-las \
+#     -fipa-pta \
+#     -ftree-vectorize \
+#     -fno-math-errno \
+#     -fno-trapping-math \
+#     -ffinite-math-only \
+# 	-ffunction-sections -fdata-sections \
+# 	-falign-functions=32 \
+# 	-falign-loops=32
 CFLAGS := $(COMMON_FLAGS) -std=gnu99 $(shell $(CURDIR)/../$(SDL)/build/sdl2-config --cflags) -DSYSTEM_VOLUME_MIXER_AVAILABLE=1
 CXXFLAGS := $(COMMON_FLAGS) -std=gnu++17
 # CXXFLAGS += -fno-rtti -fno-exceptions
 
-ASFLAGS := -g $(ARCH)
-LDFLAGS = -specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
+ASFLAGS := $(ARCH)
+LDFLAGS = -specs=3dsx.specs $(ARCH) -Wl,-Map,$(notdir $*.map) \
+		  -Wl,--gc-sections -Wl,--as-needed
 
 LIBS := $(TOPDIR)/$(SDL)/build/libSDL2main.a $(TOPDIR)/$(SDL)/build/libSDL2.a -lcitro2d -lcitro3d -lctru -lm
 LIBDIRS := $(PORTLIBS) $(CTRULIB) ./lib
@@ -284,10 +298,10 @@ cia : $(OUTPUT_FILE).cia
 elf : $(OUTPUT_FILE).elf
 
 AZAHAR=flatpak run org.azahar_emu.Azahar
-azahar : $(OUTPUT_FILE).3dsx
+azahar: $(OUTPUT_FILE).3dsx
 	$(AZAHAR) $(OUTPUT_FILE).3dsx
 
-fbi : $(OUTPUT_FILE).cia
+fbi: $(OUTPUT_FILE).cia
 	python ../buildtools/servefiles.py $(IP3DS) $(OUTPUT_FILE).cia
 
 hblauncher : $(OUTPUT_FILE).3dsx
