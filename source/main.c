@@ -76,27 +76,99 @@ void Warning(const char *error) {
 }
 
 void RtlDrawPpuFrame(uint8 *pixel_buffer, size_t pitch, uint32 render_flags) {
-  uint8 *ppu_pixels = g_other_image ? g_my_pixels : g_pixels;
+  uint8 *ppu_pixels = g_pixels; //g_other_image ? g_my_pixels : g_pixels;
   for (size_t y = 0; y < 240; y++)
     memcpy((uint8_t *)pixel_buffer + y * pitch, ppu_pixels + y * 256 * 4, 256 * 4);
 }
 
 static void DrawPpuFrame(void) {
-  int render_scale = PpuGetCurrentRenderScale(g_snes->ppu, g_ppu_render_flags);
-  uint8 *pixel_buffer = 0;
-  int pitch = 0;
+    u8 *fb = gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL);
+    uint8_t *src = g_pixels;
 
-  if (SDL_LockTexture(g_texture, NULL, (void **)&pixel_buffer, &pitch) != 0) {
-    printf("Failed to lock texture: %s\n", SDL_GetError());
-    return;
-  }
+    const int src_w = 256;
+    const int src_h = 224;
 
-  RtlDrawPpuFrame(pixel_buffer, pitch, g_ppu_render_flags);
+    const int fb_w  = 400;
+    const int fb_h  = 240;
 
-  SDL_UnlockTexture(g_texture);
-  SDL_RenderClear(g_renderer);
-  SDL_RenderCopy(g_renderer, g_texture, NULL, NULL);
-  SDL_RenderPresent(g_renderer);
+    // Aspect-correct uniform scale
+    const float scale = (float)fb_h / (float)src_h;  // 240 / 224
+
+    const int dst_w = (int)(src_w * scale);           // ~274
+    const int dst_h = fb_h;                            // 240
+
+    const int x_off = (fb_w - dst_w) / 2;
+    const int y_off = 0;
+
+    for (int dy = 0; dy < dst_h; dy++) {
+        int sy = (int)(dy / scale);
+        if (sy >= src_h) continue;
+
+        for (int dx = 0; dx < dst_w; dx++) {
+            int sx = (int)(dx / scale);
+            if (sx >= src_w) continue;
+
+            uint8_t *s = &src[(sy * src_w + sx) * 4];
+
+            uint8_t b = s[0];
+            uint8_t g = s[1];
+            uint8_t r = s[2];
+
+            int fb_x = dx + x_off;
+            int fb_y = fb_h - 1 - (dy + y_off);
+
+            u32 idx = (fb_x * fb_h + fb_y) * 4;
+
+            fb[idx + 1] = b;
+            fb[idx + 2] = g;
+            fb[idx + 3] = r;
+        }
+    }
+}
+
+static void DrawBottomScreen(void) {
+    u8 *fb = gfxGetFramebuffer(GFX_BOTTOM, GFX_LEFT, NULL, NULL);
+    uint8_t *src = g_pixels;
+
+    const int src_w = 256;
+    const int src_h = 224;
+
+    const int fb_w  = 320;
+    const int fb_h  = 240;
+
+    // Aspect-correct uniform scale
+    const float scale = (float)fb_h / (float)src_h;  // 320 / 224
+
+    const int dst_w = (int)(src_w * scale);           // ~274
+    const int dst_h = fb_h;                            // 240
+
+    const int x_off = (fb_w - dst_w) / 2;
+    const int y_off = 0;
+
+    for (int dy = 0; dy < dst_h; dy++) {
+        int sy = (int)(dy / scale);
+        if (sy >= src_h) continue;
+
+        for (int dx = 0; dx < dst_w; dx++) {
+            int sx = (int)(dx / scale);
+            if (sx >= src_w) continue;
+
+            uint8_t *s = &src[(sy * src_w + sx) * 4];
+
+            uint8_t b = s[0];
+            uint8_t g = s[1];
+            uint8_t r = s[2];
+
+            int fb_x = dx + x_off;
+            int fb_y = fb_h - 1 - (dy + y_off);
+
+            u32 idx = (fb_x * fb_h + fb_y) * 4;
+
+            fb[idx + 1] = b;
+            fb[idx + 2] = g;
+            fb[idx + 3] = r;
+        }
+    }
 }
 
 static SDL_mutex *g_audio_mutex;
@@ -175,28 +247,28 @@ static void HandleCommand(uint32 j, bool pressed) {
     return;
   }
 
-  if (j == kKeys_Turbo) {
-    g_turbo = pressed;
-    return;
-  }
+  // if (j == kKeys_Turbo) {
+  //   g_turbo = pressed;
+  //   return;
+  // }
 
-  if (!pressed)
-    return;
+  // if (!pressed)
+  //   return;
 
-  if (j <= kKeys_Load_Last) {
-    RtlSaveLoad(kSaveLoad_Load, j - kKeys_Load);
-  } else if (j <= kKeys_Save_Last) {
-    RtlSaveLoad(kSaveLoad_Save, j - kKeys_Save);
-  } else if (j <= kKeys_Replay_Last) {
-    RtlSaveLoad(kSaveLoad_Replay, j - kKeys_Replay);
-  } else {
-    switch (j) {
-    case kKeys_Reset: RtlReset(1); break;
-    case kKeys_Pause: g_paused = !g_paused; break;
-    case kKeys_ReplayTurbo: g_replay_turbo = !g_replay_turbo; break;
-    default: break;
-    }
-  }
+  // if (j <= kKeys_Load_Last) {
+  //   RtlSaveLoad(kSaveLoad_Load, j - kKeys_Load);
+  // } else if (j <= kKeys_Save_Last) {
+  //   RtlSaveLoad(kSaveLoad_Save, j - kKeys_Save);
+  // } else if (j <= kKeys_Replay_Last) {
+  //   RtlSaveLoad(kSaveLoad_Replay, j - kKeys_Replay);
+  // } else {
+  //   switch (j) {
+  //   case kKeys_Reset: RtlReset(1); break;
+  //   case kKeys_Pause: g_paused = !g_paused; break;
+  //   case kKeys_ReplayTurbo: g_replay_turbo = !g_replay_turbo; break;
+  //   default: break;
+  //   }
+  // }
 }
 
 enum {
@@ -250,12 +322,11 @@ int main(int argc, char** argv) {
   // Create window - 3DS top screen
   SDL_Window *window = SDL_CreateWindow(
     kWindowTitle,
-    SDL_WINDOWPOS_UNDEFINED,
-    SDL_WINDOWPOS_UNDEFINED,
+    SDL_WINDOWPOS_CENTERED_DISPLAY(0),
+    SDL_WINDOWPOS_CENTERED_DISPLAY(0),
     400, 240,
     SDL_WINDOW_SHOWN
   );
-
   if(window == NULL) {
     printf("Failed to create window: %s\n", SDL_GetError());
     return 1;
@@ -304,7 +375,7 @@ int main(int argc, char** argv) {
   RtlReadSram();
 
   PpuBeginDrawing(snes->snes_ppu, g_pixels, 256 * 4, 0);
-  PpuBeginDrawing(snes->my_ppu, g_my_pixels, 256 * 4, 0);
+  // PpuBeginDrawing(snes->my_ppu, g_my_pixels, 256 * 4, 0);
 
   RtlReadSram();
 
@@ -326,6 +397,8 @@ int main(int argc, char** argv) {
       case SDL_JOYBUTTONUP:
         HandleCommand(event.jbutton.button, false);
         break;
+      // case SDL_FINGERUP: // swap between emulated and native
+      //   SwapEmulatedNative();
       case SDL_QUIT:
         running = false;
         break;
@@ -351,22 +424,26 @@ int main(int argc, char** argv) {
 
     if (!g_snes->disableRender)
       DrawPpuFrame();
+    // DrawBottomScreen();
+
+    gfxFlushBuffers();
+    gfxSwapBuffers();
 
     // Frame delay for 60 fps
-    // static const uint8 delays[3] = { 17, 17, 16 };
-    // lastTick += delays[frameCtr % 3];
-    // uint32 curTick = SDL_GetTicks();
+    static const uint8 delays[3] = { 17, 17, 16 };
+    lastTick += delays[frameCtr % 3];
+    uint32 curTick = SDL_GetTicks();
 
-    // if (lastTick > curTick) {
-    //   uint32 delta = lastTick - curTick;
-    //   if (delta > 500) {
-    //     lastTick = curTick - 500;
-    //     delta = 500;
-    //   }
-    //   SDL_Delay(delta);
-    // } else if (curTick - lastTick > 500) {
-    //   lastTick = curTick;
-    // }
+    if (lastTick > curTick) {
+      uint32 delta = lastTick - curTick;
+      if (delta > 500) {
+        lastTick = curTick - 500;
+        delta = 500;
+      }
+      SDL_Delay(delta);
+    } else if (curTick - lastTick > 500) {
+      lastTick = curTick;
+    }
   }
 
   // Cleanup

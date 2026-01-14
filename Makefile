@@ -72,7 +72,14 @@ COMMON_FLAGS := -Wall -Wno-strict-aliasing -Wno-unused-value -Wno-unused-const-v
 # 	-ffunction-sections -fdata-sections \
 # 	-falign-functions=32 \
 # 	-falign-loops=32
-CFLAGS := $(COMMON_FLAGS) -std=gnu99 $(shell $(CURDIR)/../$(SDL)/build/sdl2-config --cflags) -DSYSTEM_VOLUME_MIXER_AVAILABLE=1
+
+ifeq ($(FULL_NATIVE),1)
+	EXTRA_CFLAGS := -DFULL_NATIVE
+else
+	EXTRA_CFLAGS :=
+endif
+
+CFLAGS := $(COMMON_FLAGS) -std=gnu99 $(shell $(CURDIR)/../$(SDL)/build/sdl2-config --cflags) -DSYSTEM_VOLUME_MIXER_AVAILABLE=1 $(EXTRA_CFLAGS)
 CXXFLAGS := $(COMMON_FLAGS) -std=gnu++17
 # CXXFLAGS += -fno-rtti -fno-exceptions
 
@@ -150,7 +157,7 @@ export VPATH := $(foreach dir,$(SOURCES),$(CURDIR)/$(dir) $(call recurse,d,$(CUR
 export TOPDIR := $(CURDIR)
 OUTPUT_DIR := $(TOPDIR)/$(OUTPUT)
 
-.PHONY: $(BUILD) clean all format
+.PHONY: $(BUILD) clean all format clean_sdl
 
 #---------------------------------------------------------------------------------
 # Initial Targets
@@ -192,7 +199,10 @@ fmt:
 
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(OUTPUT) $(DEVEL_OBJECTS) $(PARSER_OUT) $(SDL)/build
+	@rm -fr $(BUILD) $(OUTPUT) $(DEVEL_OBJECTS) $(PARSER_OUT)
+
+clean_sdl:
+	@rm -fr $(SDL)/build
 
 #---------------------------------------------------------------------------------
 else

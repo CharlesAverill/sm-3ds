@@ -5,11 +5,10 @@
 
 This is a 3DS port of Super Metroid, based on [the PC port by snesrev](https://github.com/snesrev/sm).
 
-This port is not yet optimized for the 3DS, and runs at ~30fps.
-Other than that, everything seems to work.
-
-Audio samples run at full speed, but with twice the delay in between.
-Likely because they're being loaded at half speed, but played by SDL at full speed in another thread.
+This runs at about 50fps on hardware per my testing.
+If you switch to the backup SNES emulation mode this gets back to 60, but audio will not work.
+And where's the fun in that anyways?
+With some careful optimization, this could surely hit 60fps.
 
 Saves are stored in the SD card's `saves` directory.
 
@@ -45,7 +44,7 @@ cp ~/Games/sm.smc romfs
 make sdl
 
 # Build sm-3ds
-make -j
+make -j FULL_NATIVE=1
 ```
 
 | Make Commands    | Action                                                                                    |
