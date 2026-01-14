@@ -10,7 +10,8 @@ If you switch to the backup SNES emulation mode this gets back to 60, but audio 
 And where's the fun in that anyways?
 With some careful optimization, this could surely hit 60fps.
 
-Saves are stored in the SD card's `saves` directory.
+Saves are dubious right now, I have them working in emulation but not on hardware.
+They should be stored in the SD card's `saves` directory.
 
 ![title screen on Azahar](screenshots/titlescreen.png)
 
